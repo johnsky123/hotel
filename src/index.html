@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>在线选房</title>
+    <meta name="viewport" content="initial-scale=1, maximum-scale=1">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <link rel="stylesheet" type="text/css" href="NGR.css">
+    <link rel="stylesheet" href="//g.alicdn.com/msui/sm/0.6.2/css/sm.min.css">
+    <link rel="stylesheet" href="//g.alicdn.com/msui/sm/0.6.2/css/sm-extend.min.css">
+    <style type="text/css">
+      .button-fill{position: absolute;}
+    </style>
+
+  </head>
+  <body>
+    <div class="page">
+  <header class="bar bar-nav">
+     <button class="button pull-left open-panel" data-panel='#panel-left-demo'>
+      按钮
+    </button>
+    <h1 class='title'>在线选房</h1>
+  </header>
+  <div class="content">
+   <!--  <div class="content-block"> -->
+      <!-- <p><a href="#" class="button button-fill open-panel" data-panel='#panel-left-demo'>打开左侧栏</a></p> -->
+       <div id="map" style="width:100%; height: 600px; padding: 0;z-index: 20;"></div>
+  <!--   </div> -->
+  </div>
+</div>
+<div class="panel-overlay"></div>
+<!-- Left Panel with Reveal effect -->
+<div class="panel panel-left panel-reveal theme-dark" id='panel-left-demo'>
+  <div class="content-block">
+    <div class="content-block-title">点击选择房间地图</div>
+    <p><a href="#" class="close-panel">关闭</a></p>
+  </div>
+  <div class="list-block">
+    <!-- .... -->
+     <ul>
+      <li class="item-content listone">
+        <div class="item-media"><i class="icon icon-f7"></i></div>
+        <div class="item-inner">
+          <div class="item-title">大床房</div>
+          <div class="item-after">1501</div>
+        </div>
+      </li>
+      <li class="item-content listtwo">
+        <div class="item-media"><i class="icon icon-f7"></i></div>
+        <div class="item-inner">
+          <div class="item-title">大床房</div>
+          <div class="item-after">1601</div>
+        </div>
+      </li>
+    </ul>
+  </div>
+</div>
+
+    
+    <script type='text/javascript' src='//g.alicdn.com/sj/lib/zepto/zepto.min.js' charset='utf-8'></script>
+    <script type='text/javascript' src='//g.alicdn.com/msui/sm/0.6.2/js/sm.min.js' charset='utf-8'></script>
+    <script type='text/javascript' src='//g.alicdn.com/msui/sm/0.6.2/js/sm-extend.min.js' charset='utf-8'></script>
+    <script src="NGR.min.js"></script>
+    <script type="text/javascript">
+    $('.listone').bind('touchend',function(){
+       mapId=833;
+       buildId=866187;
+       $.closePanel();
+       $.showPreloader();
+       mmoc();
+    })
+   
+    var mapId=null;
+    var buildId=null;
+
+     window.map = new NGR.View('map', {
+     appKey: "59e96d1f7f1e45c0b1b8e01920dd3831"
+     });
+     window.res = new NGR.DataSource({
+     appKey: "59e96d1f7f1e45c0b1b8e01920dd3831"
+     });
+   map.removeControl(map._core_map.logoControl);
+   map.removeControl(map._core_map.zoomControl);
+     window.layers = {};
+   
+   function mmoc(){
+
+  res.requestMaps(mapId).then(function (maps) {
+     res.requestPOIChildren(buildId).then(function(floors) {
+         return res.requestPlanarGraph(floors[0].id).then(function (layerInfo) {
+             console.log(layerInfo);
+             return NGR.IO.fetch({
+                 url: './style.json',
+                 onsuccess: JSON.parse
+             }).then(function (style) {
+                 layers.frame = NGR.featureLayer(layerInfo, {
+                     layerType: 'Frame',
+                     styleConfig: style
+                 });
+                 layers.shops = NGR.featureLayer(layerInfo, {
+                     layerType: 'Area',
+                     styleConfig: style
+                 });
+                 layers.annotation = NGR.featureLayer(layerInfo.Area, {
+                     layerType: 'LogoLabel',
+                     styleConfig: style
+                 });
+                 layers.facility = NGR.featureLayer(layerInfo.Facility, {
+                     layerType: 'Facility',
+                     styleConfig: style
+                 });
+                 
+                 layers.collision = NGR.layerGroup.collision({
+                     margin: 3
+                 });
+                 layers.collision.addLayer(layers.annotation);
+                 layers.collision.addLayer(layers.facility);
+                 
+                 map.addLayer(layers.frame);
+                 map.addLayer(layers.shops);
+                 map.addLayer(layers.collision);
+     
+                 map.render();
+                $.hidePreloader();
+             });
+         });
+     });
+     })
+}
+    
+     </script>
+  </body>
+</html>
